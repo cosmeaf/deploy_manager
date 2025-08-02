@@ -51,15 +51,25 @@
     </form>
 
     {% if webhook_hint %}
-        <div class="mt-4">
-            <h5><i class="fas fa-link me-2"></i>URL do Webhook</h5>
-            <div class="input-group">
-                <code class="form-control bg-light border" id="webhook-url">{{ webhook_hint }}</code>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('webhook-url')">Copiar</button>
-            </div>
-            <small class="form-text text-muted">Configure esta URL no GitHub (Settings → Webhooks) e insira o token no campo "Secret".</small>
+    <div class="mt-4 p-3 border rounded bg-light">
+        <h5><i class="fas fa-link me-2"></i>Webhook configurado</h5>
+        <p class="mb-1">Copie a URL abaixo e configure como um webhook no GitHub:</p>
+        <div class="input-group mb-2">
+            <code class="form-control bg-white border" id="webhook-url">{{ webhook_hint }}</code>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('webhook-url')">Copiar</button>
         </div>
+        <ol class="small text-muted mb-0">
+            <li>Acesse o repositório no GitHub</li>
+            <li>Vá em <strong>Settings → Webhooks → Add webhook</strong></li>
+            <li>Insira a URL acima em <code>Payload URL</code></li>
+            <li>Escolha o tipo <code>application/json</code></li>
+            <li>Cole o token no campo <strong>Secret</strong></li>
+            <li>Escolha o gatilho <code>Just the push event</code></li>
+            <li>Salve o webhook</li>
+        </ol>
+    </div>
     {% endif %}
+
 </div>
 {% endblock %}
 

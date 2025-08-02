@@ -1,5 +1,6 @@
 from django import forms
 from .models import GitProject
+import re
 import secrets
 
 class GitProjectForm(forms.ModelForm):
@@ -12,9 +13,9 @@ class GitProjectForm(forms.ModelForm):
                 'placeholder': 'Ex: meu-projeto-api',
                 'id': 'id_name'
             }),
-            'repository_url': forms.URLInput(attrs={
+            'repository_url': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'https://github.com/usuario/repositorio',
+                'placeholder': 'Ex: git@github.com:user/repo.git ou https://github.com/user/repo.git',
                 'id': 'id_repository_url'
             }),
             'webhook_secret': forms.TextInput(attrs={
@@ -24,8 +25,16 @@ class GitProjectForm(forms.ModelForm):
             }),
         }
 
+    def clean_repository_url(self):
+        url = self.cleaned_data['repository_url']
+        ssh_pattern = r'^git@[\w\.]+:[\w\-]+/[\w\-]+(\.git)?$'
+        https_pattern = r'^https://[\w\.]+/[\w\-]+/[\w\-]+(\.git)?$'
+        if not re.match(ssh_pattern, url) and not re.match(https_pattern, url):
+            raise forms.ValidationError("Informe uma URL válida SSH ou HTTPS.")
+        return url
+
     def clean_webhook_secret(self):
-        webhook_secret = self.cleaned_data.get('webhook_secret')
-        if not webhook_secret:
-            webhook_secret = secrets.token_hex(32)
-        return webhook_secret
+        token = self.cleaned_data.get('webhook_secret')
+        if not token:
+            token = secrets.token_hex(32)
+        return token
