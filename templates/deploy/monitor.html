@@ -1,73 +1,40 @@
-{% extends 'base.html' %}
+{% block scripts %}
+<script>
+function checkForUpdates() {
+    fetch("{% url 'check_updates' %}")
+        .then(response => response.json())
+        .then(data => {
+            const updatedProjects = data.updates.map(p => p.id.toString());
+            document.querySelectorAll("tbody tr[id^='project-']").forEach(row => {
+                const projectId = row.id.replace('project-', '');
+                const badge = row.querySelector('.badge-status');
 
-{% block title %}Dashboard{% endblock %}
+                if (updatedProjects.includes(projectId)) {
+                    row.classList.add('table-success');
+                    badge.classList.remove('bg-secondary');
+                    badge.classList.add('bg-success');
+                    badge.innerHTML = '<i class="fas fa-circle me-1"></i>Novo push';
+                } else {
+                    row.classList.remove('table-success');
+                    badge.classList.remove('bg-success');
+                    badge.classList.add('bg-secondary');
+                    badge.innerHTML = '<i class="fas fa-circle me-1"></i>Sem push';
+                }
+            });
 
-{% block content %}
-<div class="card shadow-sm p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">
-            <i class="fas fa-tachometer-alt me-2"></i>Projetos Monitorados
-        </h2>
-        <a href="{% url 'register_project' %}" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus-circle me-1"></i>Novo Projeto
-        </a>
-    </div>
+            // Alerta sonoro opcional ao detectar atualizações
+            if (updatedProjects.length > 0) {
+                const audio = new Audio("https://notificationsounds.com/storage/sounds/file-sounds-1152-pristine.mp3");
+                audio.play();
+            }
+        })
+        .catch(error => console.error('Erro ao verificar atualizações:', error));
+}
 
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th><i class="fas fa-project-diagram me-1" title="Nome do Projeto"></i>Projeto</th>
-                    <th><i class="fas fa-clock me-1" title="Data do último push"></i>Último Push</th>
-                    <th><i class="fas fa-signal me-1" title="Status do Projeto"></i>Status</th>
-                    <th><i class="fas fa-user me-1" title="Usuário que fez push"></i>Pusher</th>
-                    <th><i class="fas fa-code-branch me-1" title="Número de commits"></i>Commits</th>
-                    <th class="text-end"><i class="fas fa-cog me-1" title="Ações disponíveis"></i>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for project in projects %}
-                    {% with last_event=project.gitpushevent_set.last %}
-                    <tr id="project-{{ project.id }}" class="{% if project.new_push %}table-success{% endif %}">
-                        <td>
-                            <strong>{{ project.name }}</strong><br>
-                            <small class="text-muted">{{ project.repository_url }}</small>
-                        </td>
-                        <td>{{ project.last_deploy|date:"d/m/Y H:i" | default:"N/A" }}</td>
-                        <td>
-                            {% if project.new_push %}
-                                <span class="badge bg-success badge-status">
-                                    <i class="fas fa-circle me-1"></i>Novo push
-                                </span>
-                            {% else %}
-                                <span class="badge bg-secondary badge-status">
-                                    <i class="fas fa-circle me-1"></i>Sem push
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>{{ last_event.pusher|default:"—" }}</td>
-                        <td>{{ last_event.commit_count|default:"—" }}</td>
-                        <td class="text-end">
-                            {% if project.new_push %}
-                                <a href="{% url 'mark_push_viewed' project.pk %}" class="btn btn-outline-success btn-sm me-1">
-                                    <i class="fas fa-check me-1"></i>Visualizado
-                                </a>
-                            {% endif %}
-                            <a href="{% url 'delete_project' project.pk %}" class="btn btn-outline-danger btn-sm">
-                                <i class="fas fa-trash me-1"></i>Excluir
-                            </a>
-                        </td>
-                    </tr>
-                    {% endwith %}
-                {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
-                            <i class="fas fa-info-circle me-2"></i>Nenhum projeto foi cadastrado ainda.
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+// Verifica atualizações a cada 60 segundos
+setInterval(checkForUpdates, 60000);
+
+// Primeira verificação logo após carregar a página
+document.addEventListener('DOMContentLoaded', checkForUpdates);
+</script>
 {% endblock %}
