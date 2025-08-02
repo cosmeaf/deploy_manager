@@ -1,0 +1,19 @@
+body {
+    font-family: 'Arial', sans-serif;
+}
+.navbar-brand {
+    font-size: 1.5rem;
+}
+.table th, .table td {
+    vertical-align: middle;
+}
+.card {
+    border-radius: 0.5rem;
+}
+.form-control {
+    border-radius: 0.3rem;
+}
+code {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+}

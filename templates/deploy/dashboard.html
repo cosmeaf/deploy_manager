@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Cartões -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4 col-sm-12">
+            <div class="card text-white bg-primary shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <i class="fas fa-project-diagram fa-lg me-3"></i>
+                    <div>
+                        <h5 class="card-title mb-1">Projetos Registrados</h5>
+                        <p class="card-text display-5 mb-0">{{ total_projects }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12">
+            <div class="card text-white bg-success shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <i class="fas fa-code-commit fa-lg me-3"></i>
+                    <div>
+                        <h5 class="card-title mb-1">Total de Pushs</h5>
+                        <p class="card-text display-5 mb-0">{{ total_pushes }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12">
+            <div class="card text-white bg-info shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <i class="fas fa-clock fa-lg me-3"></i>
+                    <div>
+                        <h5 class="card-title mb-1">Último Push</h5>
+                        {% if latest_push %}
+                            <p class="card-text mb-0">
+                                <strong>{{ latest_push.pusher }}</strong><br>
+                                {{ latest_push.pushed_at|date:"d/m/Y H:i" }}
+                            </p>
+                        {% else %}
+                            <p class="card-text mb-0">Nenhum push registrado.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-sm-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    <h5 class="mb-0">Pushs por Dia (Últimos 7 dias)</h5>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="barChart" style="max-height: 300px; max-width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-sm-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white d-flex align-items-center">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    <h5 class="mb-0">Distribuição por Projeto</h5>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="pieChart" style="max-height: 300px; max-width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Projetos Cadastrados</h5>
+            <a href="{% url 'register_project' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus-circle me-1"></i>Novo Projeto</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-borderless">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-project-diagram me-1"></i>Nome</th>
+                            <th><i class="fas fa-clock me-1"></i>Último Push</th>
+                            <th><i class="fas fa-signal me-1"></i>Status</th>
+                            <th><i class="fas fa-user me-1"></i>Pusher</th>
+                            <th><i class="fas fa-code-branch me-1"></i>Commits</th>
+                            <th><i class="fas fa-cog me-1"></i>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                            {% with last_event=project.gitpushevent_set.last %}
+                            <tr>
+                                <td>{{ project.name }}</td>
+                                <td>{{ project.last_deploy|date:"d/m/Y H:i"|default:"N/A" }}</td>
+                                <td>
+                                    {% if project.new_push %}
+                                        <span class="text-success"><i class="fas fa-circle me-1"></i>Novo push</span>
+                                    {% else %}
+                                        <span class="text-danger"><i class="fas fa-circle me-1"></i>Sem novo push</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ last_event.pusher|default:"N/A" }}</td>
+                                <td>{{ last_event.commit_count|default:"N/A" }}</td>
+                                <td class="d-flex justify-content-end gap-2">
+                                    {% if project.new_push %}
+                                        <a href="{% url 'mark_push_viewed' project.pk %}" class="btn btn-outline-success btn-sm"><i class="fas fa-check me-1"></i>Visualizado</a>
+                                    {% endif %}
+                                    <a href="{% url 'delete_project' project.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i>Excluir</a>
+                                </td>
+                            </tr>
+                            {% endwith %}
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">Nenhum projeto cadastrado.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script>
+    // Gráfico de barras
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ bar_labels|safe }},
+            datasets: [{
+                label: 'Pushs',
+                data: {{ bar_data|safe }},
+                backgroundColor: 'rgba(13, 110, 253, 0.6)', // Azul primário suave
+                borderColor: 'rgba(13, 110, 253, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#212529',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    ticks: { color: '#212529', font: { size: 12 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#212529', font: { size: 12 } }
+                }
+            }
+        }
+    });
+
+    // Gráfico de pizza
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ pie_labels|safe }},
+            datasets: [{
+                label: 'Deploys por Projeto',
+                data: {{ pie_data|safe }},
+                backgroundColor: [
+                    'rgba(13, 110, 253, 0.6)',   // Azul
+                    'rgba(25, 135, 84, 0.6)',    // Verde
+                    'rgba(255, 193, 7, 0.6)',    // Amarelo
+                    'rgba(220, 53, 69, 0.6)',    // Vermelho
+                    'rgba(111, 66, 193, 0.6)',   // Roxo
+                    'rgba(13, 202, 240, 0.6)'    // Ciano
+                ],
+                borderColor: '#ffffff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#212529',
+                        font: { size: 12 },
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#212529',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

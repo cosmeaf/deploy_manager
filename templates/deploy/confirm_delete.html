@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4"><i class="fas fa-trash me-2"></i>Confirmar Exclusão</h2>
+    <p>Tem certeza que deseja excluir o projeto "<strong>{{ project.name }}</strong>"? Todos os eventos associados serão removidos.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="d-flex justify-content-end gap-2">
+            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i>Confirmar</button>
+            <a href="{% url 'monitor_projects' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
