@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('status/atualizacoes/', views.check_updates, name='check_updates'),
     path('register/', views.register_project, name='register_project'),
     path('monitor/', views.monitor_projects, name='monitor_projects'),
     path('webhook/git/', views.webhook_git, name='webhook_git'),

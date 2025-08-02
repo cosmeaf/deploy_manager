@@ -4,46 +4,66 @@
 
 {% block content %}
 <div class="card shadow-sm p-4">
-    <h2 class="mb-4"><i class="fas fa-tachometer-alt me-2"></i>Dashboard - Projetos Cadastrados</h2>
-    <a href="{% url 'register_project' %}" class="btn btn-primary btn-sm mb-3"><i class="fas fa-plus-circle me-1"></i>Novo Projeto</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-tachometer-alt me-2"></i>Projetos Monitorados
+        </h2>
+        <a href="{% url 'register_project' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus-circle me-1"></i>Novo Projeto
+        </a>
+    </div>
+
     <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
+        <table class="table table-striped align-middle">
+            <thead class="table-dark">
                 <tr>
-                    <th><i class="fas fa-project-diagram me-1"></i>Nome</th>
-                    <th><i class="fas fa-clock me-1"></i>Último Push</th>
-                    <th><i class="fas fa-signal me-1"></i>Status</th>
-                    <th><i class="fas fa-user me-1"></i>Pusher</th>
-                    <th><i class="fas fa-code-branch me-1"></i>Commits</th>
-                    <th><i class="fas fa-cog me-1"></i>Ações</th>
+                    <th><i class="fas fa-project-diagram me-1" title="Nome do Projeto"></i>Projeto</th>
+                    <th><i class="fas fa-clock me-1" title="Data do último push"></i>Último Push</th>
+                    <th><i class="fas fa-signal me-1" title="Status do Projeto"></i>Status</th>
+                    <th><i class="fas fa-user me-1" title="Usuário que fez push"></i>Pusher</th>
+                    <th><i class="fas fa-code-branch me-1" title="Número de commits"></i>Commits</th>
+                    <th class="text-end"><i class="fas fa-cog me-1" title="Ações disponíveis"></i>Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for project in projects %}
                     {% with last_event=project.gitpushevent_set.last %}
-                    <tr>
-                        <td>{{ project.name }}</td>
-                        <td>{{ project.last_deploy|date:"d/m/Y H:i"|default:"N/A" }}</td>
+                    <tr id="project-{{ project.id }}" class="{% if project.new_push %}table-success{% endif %}">
+                        <td>
+                            <strong>{{ project.name }}</strong><br>
+                            <small class="text-muted">{{ project.repository_url }}</small>
+                        </td>
+                        <td>{{ project.last_deploy|date:"d/m/Y H:i" | default:"N/A" }}</td>
                         <td>
                             {% if project.new_push %}
-                                <span class="text-success"><i class="fas fa-circle me-1"></i>Novo push</span>
+                                <span class="badge bg-success badge-status">
+                                    <i class="fas fa-circle me-1"></i>Novo push
+                                </span>
                             {% else %}
-                                <span class="text-danger"><i class="fas fa-circle me-1"></i>Sem novo push</span>
+                                <span class="badge bg-secondary badge-status">
+                                    <i class="fas fa-circle me-1"></i>Sem push
+                                </span>
                             {% endif %}
                         </td>
-                        <td>{{ last_event.pusher|default:"N/A" }}</td>
-                        <td>{{ last_event.commit_count|default:"N/A" }}</td>
-                        <td>
+                        <td>{{ last_event.pusher|default:"—" }}</td>
+                        <td>{{ last_event.commit_count|default:"—" }}</td>
+                        <td class="text-end">
                             {% if project.new_push %}
-                                <a href="{% url 'mark_push_viewed' project.pk %}" class="btn btn-outline-success btn-sm me-1"><i class="fas fa-check me-1"></i>Visualizado</a>
+                                <a href="{% url 'mark_push_viewed' project.pk %}" class="btn btn-outline-success btn-sm me-1">
+                                    <i class="fas fa-check me-1"></i>Visualizado
+                                </a>
                             {% endif %}
-                            <a href="{% url 'delete_project' project.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i>Excluir</a>
+                            <a href="{% url 'delete_project' project.pk %}" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-trash me-1"></i>Excluir
+                            </a>
                         </td>
                     </tr>
                     {% endwith %}
                 {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center">Nenhum projeto cadastrado.</td>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="fas fa-info-circle me-2"></i>Nenhum projeto foi cadastrado ainda.
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

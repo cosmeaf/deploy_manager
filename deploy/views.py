@@ -3,6 +3,7 @@ import hashlib
 import secrets
 import json
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
@@ -49,19 +50,27 @@ def dashboard_view(request):
     })
 
 
+def check_updates(request):
+    updates = GitProject.objects.filter(new_push=True).values('id', 'name')
+    return JsonResponse({'updates': list(updates)})
 
 def register_project(request):
     if request.method == 'POST':
         form = GitProjectForm(request.POST)
         if form.is_valid():
             project = form.save()
-            # Gera a WEBHOOK_URL dinamicamente com base na requisição
-            webhook_url = request.build_absolute_uri('/deploy/webhook/git/')
+            webhook_path = reverse('webhook_git')
+            webhook_url = request.build_absolute_uri(webhook_path)
             webhook_hint = f"{webhook_url}?secret={project.webhook_secret}"
+
             messages.success(request, f'Projeto "{project.name}" cadastrado! Configure o webhook no GitHub.')
-            return render(request, 'deploy/register.html', {'form': GitProjectForm(), 'webhook_hint': webhook_hint})
+            return render(request, 'deploy/register.html', {
+                'form': GitProjectForm(), 
+                'webhook_hint': webhook_hint
+            })
     else:
         form = GitProjectForm()
+
     return render(request, 'deploy/register.html', {'form': form})
 
 def monitor_projects(request):

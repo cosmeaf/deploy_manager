@@ -74,58 +74,6 @@
         </div>
     </div>
 
-    <!-- Tabela -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between">
-            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Projetos Cadastrados</h5>
-            <a href="{% url 'register_project' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus-circle me-1"></i>Novo Projeto</a>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover table-borderless">
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-project-diagram me-1"></i>Nome</th>
-                            <th><i class="fas fa-clock me-1"></i>Último Push</th>
-                            <th><i class="fas fa-signal me-1"></i>Status</th>
-                            <th><i class="fas fa-user me-1"></i>Pusher</th>
-                            <th><i class="fas fa-code-branch me-1"></i>Commits</th>
-                            <th><i class="fas fa-cog me-1"></i>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for project in projects %}
-                            {% with last_event=project.gitpushevent_set.last %}
-                            <tr>
-                                <td>{{ project.name }}</td>
-                                <td>{{ project.last_deploy|date:"d/m/Y H:i"|default:"N/A" }}</td>
-                                <td>
-                                    {% if project.new_push %}
-                                        <span class="text-success"><i class="fas fa-circle me-1"></i>Novo push</span>
-                                    {% else %}
-                                        <span class="text-danger"><i class="fas fa-circle me-1"></i>Sem novo push</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ last_event.pusher|default:"N/A" }}</td>
-                                <td>{{ last_event.commit_count|default:"N/A" }}</td>
-                                <td class="d-flex justify-content-end gap-2">
-                                    {% if project.new_push %}
-                                        <a href="{% url 'mark_push_viewed' project.pk %}" class="btn btn-outline-success btn-sm"><i class="fas fa-check me-1"></i>Visualizado</a>
-                                    {% endif %}
-                                    <a href="{% url 'delete_project' project.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i>Excluir</a>
-                                </td>
-                            </tr>
-                            {% endwith %}
-                        {% empty %}
-                            <tr>
-                                <td colspan="6" class="text-center">Nenhum projeto cadastrado.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
